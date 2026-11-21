@@ -128,10 +128,40 @@ export default function Dashboard() {
     {!data ? <div className="empty card"><div className="empty-icon">⌁</div><h2>Ready to check Canda Bot</h2><p>Click Check Status to request fresh hardware readings. Canda Bot checks for your request every 30 seconds and only uploads telemetry when requested.</p><button onClick={checkDeviceStatus} disabled={loading}>{loading ? 'Waiting for Canda Bot…' : 'Check Status'}</button></div> : <>
       <div className="section-kicker"><span>01 / LIVE TELEMETRY</span><span>{age === null ? 'Waiting for packet' : `Last packet ${age}s ago`}</span></div>
       <section className="metrics-grid">
-        <Metric label="PROCESSOR LOAD" value={Number(data.cpuLoadPercent ?? 0).toFixed(1)} unit="%" detail={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`} percent={data.cpuLoadPercent ?? 0} tone={data.cpuLoadPercent > 85 ? 'amber' : 'green'}/>
-        <Metric label="HEAP MEMORY USED" value={heapPercent.toFixed(1)} unit="%" detail={`${bytes(data.heapUsed)} / ${bytes(data.heapTotal)}`} percent={heapPercent} tone={heapPercent > 85 ? 'amber' : 'green'}/>
-        <Metric label="WI-FI SIGNAL" value={data.wifiRssi ?? '—'} unit=" dBm" detail={data.wifiConnected ? 'Connected to local network' : 'Wi-Fi disconnected'} percent={signalPercent}/>
-        <Metric label="CHIP TEMPERATURE" value={Number(data.chipTemperatureC ?? 0).toFixed(1)} unit=" °C" detail="Internal sensor · approximate, not ambient"}/>
+        
+<Metric
+  label="PROCESSOR LOAD"
+  value={Number(data.cpuLoadPercent ?? 0).toFixed(1)}
+  unit="%"
+  detail={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`}
+  percent={data.cpuLoadPercent ?? 0}
+  tone={data.cpuLoadPercent > 85 ? 'amber' : 'green'}
+/>
+
+<Metric
+  label="HEAP MEMORY USED"
+  value={heapPercent.toFixed(1)}
+  unit="%"
+  detail={`${bytes(data.heapUsed)} / ${bytes(data.heapTotal)}`}
+  percent={heapPercent}
+  tone={heapPercent > 85 ? 'amber' : 'green'}
+/>
+
+<Metric
+  label="WI-FI SIGNAL"
+  value={data.wifiRssi ?? '—'}
+  unit=" dBm"
+  detail={data.wifiConnected ? 'Connected to local network' : 'Wi-Fi disconnected'}
+  percent={signalPercent}
+/>
+
+<Metric
+  label="CHIP TEMPERATURE"
+  value={Number(data.chipTemperatureC ?? 0).toFixed(1)}
+  unit=" °C"
+  detail="Internal sensor · approximate, not ambient"
+/>
+
       </section>
       <section className="chart-grid" id="resources">
         <HistoryChart title="CPU WORKLOAD" subtitle="Estimated busy time from FreeRTOS idle-task counters" value={`${Number(data.cpuLoadPercent ?? 0).toFixed(1)}%`} unit="%" samples={samples} field="cpuLoadPercent" format={v => `${v.toFixed(1)}%`}/>
