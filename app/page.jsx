@@ -121,62 +121,296 @@ export default function Dashboard() {
 
   if (!authenticated) return <main className="login-wrap"><div className="login-card card"><div className="brand"><div className="brand-mark">CB</div><div><div className="brand-name">CANDA BOT</div><div className="brand-sub">BUILDERSPACE / DEVICE LAB</div></div></div><p className="eyebrow">SMALL BOARD. REAL TELEMETRY.</p><h1>A window into your device.</h1><p className="muted">Sign in to explore live ESP32 hardware, memory and network telemetry.</p><form onSubmit={login} className="login-form"><label htmlFor="password">Dashboard password</label><input id="password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter dashboard password" required/><button disabled={loading}>{loading ? 'Signing in…' : 'Open dashboard'} <span>→</span></button></form>{error && <p className="error-text">{error}</p>}<p className="login-foot">PRIVATE DEVICE TELEMETRY · HTTPS SESSION</p></div></main>;
 
-  return <main className="shell">
-    <header className="topbar"><div className="brand"><div className="brand-mark small">CB</div><div><div className="brand-name">CANDA BOT</div><div className="brand-sub">BUILDERSPACE / ESP32 LAB</div></div></div><nav className="nav-links"><a className="active" href="#overview">Overview</a><a href="#resources">Resources</a><a href="#network">Network</a><a href="#device">Device</a></nav><div className="top-actions"><span className="live-label"><i className={online ? 'dot online' : 'dot'}/>{online ? 'LAST CHECK ONLINE' : 'NOT CHECKED'}</span><button className="ghost-button" onClick={checkDeviceStatus} disabled={loading}>{loading ? 'Checking…' : 'Check Status'}</button><button className="ghost-button logout" onClick={logout}>Log out</button></div></header>
-    <section className="hero" id="overview"><div><p className="eyebrow">SMALL BOARD. REAL TELEMETRY.</p><h1>A microcontroller.<br/><span>A window into its world.</span></h1><p className="hero-copy">Request fresh insight into Canda Bot’s hardware, memory and connectivity.<br/>Telemetry is sent only when you click Check Status.</p></div><div className={`status-pill ${online ? 'good' : 'bad'}`}><i className="dot"/>{online ? 'DEVICE ONLINE' : 'DEVICE OFFLINE'}</div></section>
-    {error && <div className="notice">{error}</div>}
-    {!data ? <div className="empty card"><div className="empty-icon">⌁</div><h2>Ready to check Canda Bot</h2><p>Click Check Status to request fresh hardware readings. Canda Bot checks for your request every 30 seconds and only uploads telemetry when requested.</p><button onClick={checkDeviceStatus} disabled={loading}>{loading ? 'Waiting for Canda Bot…' : 'Check Status'}</button></div> : <>
-      <div className="section-kicker"><span>01 / LIVE TELEMETRY</span><span>{age === null ? 'Waiting for packet' : `Last packet ${age}s ago`}</span></div>
-     
-      <section className="metrics-grid">
-        <Metric
-          label="PROCESSOR LOAD"
-          value={Number(data.cpuLoadPercent ?? 0).toFixed(1)}
-          unit="%"
-          detail={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`}
-          percent={data.cpuLoadPercent ?? 0}
-          tone={data.cpuLoadPercent > 85 ? 'amber' : 'green'}
-        />
 
-        <Metric
-          label="HEAP MEMORY USED"
-          value={heapPercent.toFixed(1)}
-          unit="%"
-          detail={`${bytes(data.heapUsed)} / ${bytes(data.heapTotal)}`}
-          percent={heapPercent}
-          tone={heapPercent > 85 ? 'amber' : 'green'}
-        />
+  return (
+    <main className="shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark small">CB</div>
+          <div>
+            <div className="brand-name">CANDA BOT</div>
+            <div className="brand-sub">BUILDERSPACE / ESP32 LAB</div>
+          </div>
+        </div>
 
-        <Metric
-          label="WI-FI SIGNAL"
-          value={data.wifiRssi ?? '—'}
-          unit=" dBm"
-          detail={data.wifiConnected ? 'Connected to local network' : 'Wi-Fi disconnected'}
-          percent={signalPercent}
-        />
+        <nav className="nav-links">
+          <a className="active" href="#overview">Overview</a>
+          <a href="#resources">Resources</a>
+          <a href="#network">Network</a>
+          <a href="#device">Device</a>
+        </nav>
 
-        <Metric
-          label="CHIP TEMPERATURE"
-          value={Number(data.chipTemperatureC ?? 0).toFixed(1)}
-          unit=" °C"
-          detail="Internal sensor · approximate, not ambient"
-        />
+        <div className="top-actions">
+          <span className="live-label">
+            <i className={online ? 'dot online' : 'dot'} />
+            {online ? 'LAST CHECK ONLINE' : 'NOT CHECKED'}
+          </span>
+          <button
+            className="ghost-button"
+            onClick={checkDeviceStatus}
+            disabled={loading}
+          >
+            {loading ? 'Checking…' : 'Check Status'}
+          </button>
+          <button className="ghost-button logout" onClick={logout}>
+            Log out
+          </button>
+        </div>
+      </header>
+
+      <section className="hero" id="overview">
+        <div>
+          <p className="eyebrow">SMALL BOARD. REAL TELEMETRY.</p>
+          <h1>
+            A microcontroller.
+            <br />
+            <span>A window into its world.</span>
+          </h1>
+          <p className="hero-copy">
+            Request fresh insight into Canda Bot’s hardware, memory and connectivity.
+            <br />
+            Telemetry is sent only when you click Check Status.
+          </p>
+        </div>
+
+        <div className={`status-pill ${online ? 'good' : 'bad'}`}>
+          <i className="dot" />
+          {online ? 'DEVICE ONLINE' : 'DEVICE OFFLINE'}
+        </div>
       </section>
 
-      <section className="chart-grid" id="resources">
-        <HistoryChart title="CPU WORKLOAD" subtitle="Estimated busy time from FreeRTOS idle-task counters" value={`${Number(data.cpuLoadPercent ?? 0).toFixed(1)}%`} unit="%" samples={samples} field="cpuLoadPercent" format={v => `${v.toFixed(1)}%`}/>
-        <HistoryChart title="HEAP PRESSURE" subtitle="Allocated internal heap / available heap capacity" value={`${heapPercent.toFixed(1)}%`} unit="%" samples={samples} field="heapPercent" format={v => `${v.toFixed(1)}%`}/>
-        <HistoryChart title="WI-FI SIGNAL HISTORY" subtitle="Received signal strength from the ESP32" value={`${data.wifiRssi ?? '—'} dBm`} unit=" dBm" samples={samples} field="wifiRssi" color="orange" format={v => `${v.toFixed(0)} dBm`}/>
-        <HistoryChart title="CHIP TEMPERATURE" subtitle="Approximate internal sensor reading" value={`${Number(data.chipTemperatureC ?? 0).toFixed(1)} °C`} unit=" °C" samples={samples} field="chipTemperatureC" color="orange" format={v => `${v.toFixed(1)} °C`}/>
-      </section>
-      <div className="section-kicker section-spaced" id="network"><span>02 / NETWORK & CONNECTIVITY</span><span>LIVE DEVICE STATE</span></div>
-      <section className="detail-grid">
-        <section className="card detail-card"><div className="detail-heading"><div><p className="eyebrow">NETWORK LINK</p><h2>Wi-Fi connection</h2></div><span className={`mini-status ${data.wifiConnected ? 'ok' : 'fail'}`}>{data.wifiConnected ? 'CONNECTED' : 'DISCONNECTED'}</span></div><div className="signal-meter"><span style={{width:`${signalPercent}%`}}/></div><Info label="Signal strength" value={`${data.wifiRssi ?? '—'} dBm`}/><Info label="Local IP address" value={data.ip}/><Info label="MAC address" value={data.mac}/><Info label="Internet access" value={data.internetConnected ? 'Available' : 'Unavailable'}/><Info label="Failed connectivity checks" value={data.internetFailures}/></section>
-        <section className="card detail-card" id="device"><div className="detail-heading"><div><p className="eyebrow">BOARD STATUS</p><h2>Device information</h2></div><span className={`mini-status ${data.networkProblem ? 'fail' : 'ok'}`}>{data.networkProblem ? 'ATTENTION' : 'HEALTHY'}</span></div><Info label="Chip model" value={data.chipModel}/><Info label="CPU frequency" value={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`}/><Info label="Processor load" value={`${Number(data.cpuLoadPercent ?? 0).toFixed(1)}% (estimated)`}/><Info label="Chip temperature" value={`${Number(data.chipTemperatureC ?? 0).toFixed(1)} °C (approx.)`}/><Info label="OLED display" value={data.oledAvailable ? 'Detected' : 'Not detected'}/><Info label="Sleep mode" value={data.sleeping ? 'Sleeping' : 'Awake'}/><Info label="OTA update" value={data.otaInProgress ? 'In progress' : 'Idle'}/><Info label="Uptime" value={duration(data.uptimeSeconds)}/></section>
-      </section>
-      <div className="section-kicker section-spaced"><span>03 / MEMORY & STORAGE</span><span>CAPACITY DETAILS</span></div>
-      <section className="card storage-card"><div className="storage-block"><div className="storage-title"><div><h3>Internal heap memory</h3><p>Runtime memory available to the firmware</p></div><strong>{heapPercent.toFixed(1)}% used</strong></div><div className="wide-meter"><span style={{width:`${heapPercent}%`}}/></div><div className="storage-foot"><span>Free: {bytes(data.heapFree)}</span><span>Minimum free: {bytes(data.heapMinFree)}</span><span>Total: {bytes(data.heapTotal)}</span></div></div><div className="storage-block"><div className="storage-title"><div><h3>Flash & firmware</h3><p>Application size and available OTA partition space</p></div><strong>{sketchPercent.toFixed(1)}% of flash</strong></div><div className="wide-meter"><span style={{width:`${Math.min(100,sketchPercent)}%`}}/></div><div className="storage-foot"><span>Firmware: {bytes(data.sketchSize)}</span><span>OTA free: {bytes(data.sketchFree)}</span><span>Flash total: {bytes(data.flashSize)}</span></div></div><div className="storage-block"><div className="storage-title"><div><h3>External PSRAM</h3><p>Additional memory fitted to the board, if available</p></div><strong>{bytes(data.psramTotal)}</strong></div><div className="storage-foot"><span>Free: {bytes(data.psramFree)}</span><span>Used: {bytes(Math.max(0,(data.psramTotal || 0)-(data.psramFree || 0)))}</span></div></div></section>
-    </>}
-    <footer className="footer"><span>CANDA BOT / ESP32 TELEMETRY</span><span>ON-DEMAND TELEMETRY · {lastUpdated ? `UPDATED ${lastUpdated.toLocaleTimeString()}` : 'AWAITING DATA'}</span></footer>
-  </main>;
+      {error && <div className="notice">{error}</div>}
+
+      {!data ? (
+        <div className="empty card">
+          <div className="empty-icon">⌁</div>
+          <h2>Ready to check Canda Bot</h2>
+          <p>
+            Click Check Status to request fresh hardware readings.
+            Canda Bot checks for your request every 30 seconds and only
+            uploads telemetry when requested.
+          </p>
+          <button onClick={checkDeviceStatus} disabled={loading}>
+            {loading ? 'Waiting for Canda Bot…' : 'Check Status'}
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="section-kicker">
+            <span>01 / LIVE TELEMETRY</span>
+            <span>
+              {age === null ? 'Waiting for packet' : `Last packet ${age}s ago`}
+            </span>
+          </div>
+
+          <section className="metrics-grid">
+            <Metric
+              label="PROCESSOR LOAD"
+              value={Number(data.cpuLoadPercent ?? 0).toFixed(1)}
+              unit="%"
+              detail={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`}
+              percent={data.cpuLoadPercent ?? 0}
+              tone={data.cpuLoadPercent > 85 ? 'amber' : 'green'}
+            />
+
+            <Metric
+              label="HEAP MEMORY USED"
+              value={heapPercent.toFixed(1)}
+              unit="%"
+              detail={`${bytes(data.heapUsed)} / ${bytes(data.heapTotal)}`}
+              percent={heapPercent}
+              tone={heapPercent > 85 ? 'amber' : 'green'}
+            />
+
+            <Metric
+              label="WI-FI SIGNAL"
+              value={data.wifiRssi ?? '—'}
+              unit=" dBm"
+              detail={
+                data.wifiConnected
+                  ? 'Connected to local network'
+                  : 'Wi-Fi disconnected'
+              }
+              percent={signalPercent}
+            />
+
+            <Metric
+              label="CHIP TEMPERATURE"
+              value={Number(data.chipTemperatureC ?? 0).toFixed(1)}
+              unit=" °C"
+              detail="Internal sensor · approximate, not ambient"
+            />
+          </section>
+
+          <section className="chart-grid" id="resources">
+            <HistoryChart
+              title="CPU WORKLOAD"
+              subtitle="Estimated busy time from FreeRTOS idle-task counters"
+              value={`${Number(data.cpuLoadPercent ?? 0).toFixed(1)}%`}
+              unit="%"
+              samples={samples}
+              field="cpuLoadPercent"
+              format={v => `${v.toFixed(1)}%`}
+            />
+
+            <HistoryChart
+              title="HEAP PRESSURE"
+              subtitle="Allocated internal heap / available heap capacity"
+              value={`${heapPercent.toFixed(1)}%`}
+              unit="%"
+              samples={samples}
+              field="heapPercent"
+              format={v => `${v.toFixed(1)}%`}
+            />
+
+            <HistoryChart
+              title="WI-FI SIGNAL HISTORY"
+              subtitle="Received signal strength from the ESP32"
+              value={`${data.wifiRssi ?? '—'} dBm`}
+              unit=" dBm"
+              samples={samples}
+              field="wifiRssi"
+              color="orange"
+              format={v => `${v.toFixed(0)} dBm`}
+            />
+
+            <HistoryChart
+              title="CHIP TEMPERATURE"
+              subtitle="Approximate internal sensor reading"
+              value={`${Number(data.chipTemperatureC ?? 0).toFixed(1)} °C`}
+              unit=" °C"
+              samples={samples}
+              field="chipTemperatureC"
+              color="orange"
+              format={v => `${v.toFixed(1)} °C`}
+            />
+          </section>
+
+          <div className="section-kicker section-spaced" id="network">
+            <span>02 / NETWORK & CONNECTIVITY</span>
+            <span>LIVE DEVICE STATE</span>
+          </div>
+
+          <section className="detail-grid">
+            <section className="card detail-card">
+              <div className="detail-heading">
+                <div>
+                  <p className="eyebrow">NETWORK LINK</p>
+                  <h2>Wi-Fi connection</h2>
+                </div>
+                <span className={`mini-status ${data.wifiConnected ? 'ok' : 'fail'}`}>
+                  {data.wifiConnected ? 'CONNECTED' : 'DISCONNECTED'}
+                </span>
+              </div>
+
+              <div className="signal-meter">
+                <span style={{ width: `${signalPercent}%` }} />
+              </div>
+
+              <Info label="Signal strength" value={`${data.wifiRssi ?? '—'} dBm`} />
+              <Info label="Local IP address" value={data.ip} />
+              <Info label="MAC address" value={data.mac} />
+              <Info label="Internet access" value={data.internetConnected ? 'Available' : 'Unavailable'} />
+              <Info label="Failed connectivity checks" value={data.internetFailures} />
+            </section>
+
+            <section className="card detail-card" id="device">
+              <div className="detail-heading">
+                <div>
+                  <p className="eyebrow">BOARD STATUS</p>
+                  <h2>Device information</h2>
+                </div>
+                <span className={`mini-status ${data.networkProblem ? 'fail' : 'ok'}`}>
+                  {data.networkProblem ? 'ATTENTION' : 'HEALTHY'}
+                </span>
+              </div>
+
+              <Info label="Chip model" value={data.chipModel} />
+              <Info label="CPU frequency" value={`${data.cpuMHz ?? '—'} MHz · ${data.cores ?? '—'} cores`} />
+              <Info label="Processor load" value={`${Number(data.cpuLoadPercent ?? 0).toFixed(1)}% (estimated)`} />
+              <Info label="Chip temperature" value={`${Number(data.chipTemperatureC ?? 0).toFixed(1)} °C (approx.)`} />
+              <Info label="OLED display" value={data.oledAvailable ? 'Detected' : 'Not detected'} />
+              <Info label="Sleep mode" value={data.sleeping ? 'Sleeping' : 'Awake'} />
+              <Info label="OTA update" value={data.otaInProgress ? 'In progress' : 'Idle'} />
+              <Info label="Uptime" value={duration(data.uptimeSeconds)} />
+            </section>
+          </section>
+
+          <div className="section-kicker section-spaced">
+            <span>03 / MEMORY & STORAGE</span>
+            <span>CAPACITY DETAILS</span>
+          </div>
+
+          <section className="card storage-card">
+            <div className="storage-block">
+              <div className="storage-title">
+                <div>
+                  <h3>Internal heap memory</h3>
+                  <p>Runtime memory available to the firmware</p>
+                </div>
+                <strong>{heapPercent.toFixed(1)}% used</strong>
+              </div>
+
+              <div className="wide-meter">
+                <span style={{ width: `${heapPercent}%` }} />
+              </div>
+
+              <div className="storage-foot">
+                <span>Free: {bytes(data.heapFree)}</span>
+                <span>Minimum free: {bytes(data.heapMinFree)}</span>
+                <span>Total: {bytes(data.heapTotal)}</span>
+              </div>
+            </div>
+
+            <div className="storage-block">
+              <div className="storage-title">
+                <div>
+                  <h3>Flash & firmware</h3>
+                  <p>Application size and available OTA partition space</p>
+                </div>
+                <strong>{sketchPercent.toFixed(1)}% of flash</strong>
+              </div>
+
+              <div className="wide-meter">
+                <span style={{ width: `${Math.min(100, sketchPercent)}%` }} />
+              </div>
+
+              <div className="storage-foot">
+                <span>Firmware: {bytes(data.sketchSize)}</span>
+                <span>OTA free: {bytes(data.sketchFree)}</span>
+                <span>Flash total: {bytes(data.flashSize)}</span>
+              </div>
+            </div>
+
+            <div className="storage-block">
+              <div className="storage-title">
+                <div>
+                  <h3>External PSRAM</h3>
+                  <p>Additional memory fitted to the board, if available</p>
+                </div>
+                <strong>{bytes(data.psramTotal)}</strong>
+              </div>
+
+              <div className="storage-foot">
+                <span>Free: {bytes(data.psramFree)}</span>
+                <span>
+                  Used: {bytes(Math.max(0, (data.psramTotal || 0) - (data.psramFree || 0)))}
+                </span>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      <footer className="footer">
+        <span>CANDA BOT / ESP32 TELEMETRY</span>
+        <span>
+          ON-DEMAND TELEMETRY · {lastUpdated
+            ? `UPDATED ${lastUpdated.toLocaleTimeString()}`
+            : 'AWAITING DATA'}
+        </span>
+      </footer>
+    </main>
+  );
 }
+
