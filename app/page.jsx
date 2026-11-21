@@ -234,12 +234,7 @@ export default function Dashboard() {
               percent={signalPercent}
             />
 
-            <Metric
-              label="CHIP TEMPERATURE"
-              value={Number(data.chipTemperatureC ?? 0).toFixed(1)}
-              unit=" °C"
-              detail="Internal sensor · approximate, not ambient"
-            />
+            <Metric label="CHIP TEMPERATURE" value={Number(data.chipTemperatureC ?? 0).toFixed(1)} unit=" °C" detail="Internal sensor · approximate, not ambient" />
           </section>
 
           <section className="chart-grid" id="resources">
